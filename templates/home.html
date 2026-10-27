@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - HydraVision{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Flowing intelligence for water quality management</h2>
+    <p>
+        HydraVision helps laboratories and customers manage sample registration,
+        testing, BIS validation, recommendations, and reporting through a clean
+        digital workflow with role-based access.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+{% if request.user.is_authenticated %}
+    {% if role == 'Client' %}
+        <p>Welcome, {{ request.user.username }}. You are logged in as <strong>Client</strong>.</p>
+        <a href="{% url 'client_dashboard' %}" class="btn">Go to Client Dashboard</a>
+    {% elif role == 'Lab Technician' %}
+        <p>Welcome, {{ request.user.username }}. You are logged in as <strong>Lab Technician</strong>.</p>
+        <a href="{% url 'water_test_list' %}" class="btn">Go to Water Tests</a>
+    {% elif role == 'Admin' %}
+        <p>Welcome, {{ request.user.username }}. You are logged in as <strong>Admin</strong>.</p>
+        <a href="{% url 'sample_list' %}" class="btn">Manage Samples</a>
+    {% else %}
+        <p>No role assigned to your account. Please contact the administrator.</p>
+    {% endif %}
+{% else %}
+    <p>Please choose a login option from the top-right corner based on your role.</p>
+{% endif %}
+{% endblock %}

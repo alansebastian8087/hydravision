@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Enter Test Results - HydraVision{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Enter laboratory water test values</h2>
+    <p>
+        Submit test parameter values for automatic quality score calculation, water-status prediction, and recommendation generation.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Enter Water Test Results</h1>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        <div class="info-pill">Sample Information</div>
+        <p><strong>Sample Code:</strong> {{ sample.sample_code }}</p>
+        <p><strong>Customer:</strong> {{ sample.customer.name }}</p>
+        <p><strong>Water Source:</strong> {{ sample.water_source }}</p>
+        <p><strong>Collection Date:</strong> {{ sample.collection_date|date:"Y-m-d"|default:"-" }}</p>
+        <p><strong>Status:</strong> {{ sample.sample_status }}</p>
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Automatic Calculation</div>
+        <p class="muted">
+            Enter all laboratory values and save the form. HydraVision will automatically calculate the water-quality score, predict Safe or Unsafe status, and generate a treatment recommendation.
+        </p>
+        <p class="muted">
+            The score starts at 100. Points are reduced for every parameter outside the configured acceptable limit.
+        </p>
+    </div>
+</div>
+
+<h2 class="section-title">Manual Parameter Entry</h2>
+
+<div class="module-grid">
+    <div class="module-card full">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="banner danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="parameter-grid">
+                <div class="parameter-card">
+                    <h4>pH</h4>
+                    <p class="muted">Safe range: 6.5 – 8.5</p>
+                    {{ form.ph }}
+                    {% for error in form.ph.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>TDS</h4>
+                    <p class="muted">Limit: ≤ 500 mg/L</p>
+                    {{ form.tds }}
+                    {% for error in form.tds.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Turbidity</h4>
+                    <p class="muted">Limit: ≤ 1 NTU</p>
+                    {{ form.turbidity }}
+                    {% for error in form.turbidity.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Hardness</h4>
+                    <p class="muted">Limit: ≤ 200 mg/L</p>
+                    {{ form.hardness }}
+                    {% for error in form.hardness.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Fluoride</h4>
+                    <p class="muted">Limit: ≤ 1.0 mg/L</p>
+                    {{ form.fluoride }}
+                    {% for error in form.fluoride.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Iron</h4>
+                    <p class="muted">Limit: ≤ 0.3 mg/L</p>
+                    {{ form.iron }}
+                    {% for error in form.iron.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Nitrate</h4>
+                    <p class="muted">Limit: ≤ 45 mg/L</p>
+                    {{ form.nitrate }}
+                    {% for error in form.nitrate.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Chloride</h4>
+                    <p class="muted">Limit: ≤ 250 mg/L</p>
+                    {{ form.chloride }}
+                    {% for error in form.chloride.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Sulphate</h4>
+                    <p class="muted">Limit: ≤ 200 mg/L</p>
+                    {{ form.sulphate }}
+                    {% for error in form.sulphate.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="parameter-card">
+                    <h4>Alkalinity</h4>
+                    <p class="muted">Limit: ≤ 200 mg/L as CaCO₃</p>
+                    {{ form.alkalinity }}
+                    {% for error in form.alkalinity.errors %}
+                        <div class="banner danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button type="submit" class="btn">Save and Calculate Result</button>
+                <a href="{% url 'sample_requests' %}" class="btn secondary">Back to Sample Requests</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

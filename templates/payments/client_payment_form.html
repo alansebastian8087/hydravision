@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Demo Payment - HydraVision{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Complete sample payment</h2>
+    <p>
+        Your sample has been registered successfully. Continue by submitting the demo payment.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>{{ page_title }}</h1>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        <div class="info-pill">Sample Summary</div>
+        <p><strong>Sample Code:</strong> {{ sample.sample_code }}</p>
+        <p><strong>Customer:</strong> {{ sample.customer.name }}</p>
+        <p><strong>Water Source:</strong> {{ sample.water_source }}</p>
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Payment Summary</div>
+        <p><strong>Fixed Amount:</strong> ₹{{ fixed_amount }}</p>
+        <p><strong>Approval:</strong> This payment will be submitted for admin approval.</p>
+    </div>
+</div>
+
+<div class="module-grid" style="margin-top:18px;">
+    <div class="module-card full">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions-row">
+                <button type="submit" class="btn">Submit Payment</button>
+                <a href="{% url 'sample_detail' sample.pk %}" class="btn secondary">Skip</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

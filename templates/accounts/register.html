@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Client Registration - HydraVision{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <div class="auth-visual">
+        <div class="auth-brand">
+            <div class="auth-kicker">HydraVision • Trusted Water Testing</div>
+            <h2>Register for clean water insights and smarter <span class="accent">reporting.</span></h2>
+            <p>
+                Create your client account to manage samples, access reports, and stay connected with
+                reliable laboratory results in a beautifully designed water-focused portal.
+            </p>
+        </div>
+
+        <div class="feature-stack">
+            <div class="feature-chip">
+                <div class="feature-icon">🧪</div>
+                <div>
+                    <strong>Sample Visibility</strong>
+                    <span>Track submitted samples and status updates from one place.</span>
+                </div>
+            </div>
+
+            <div class="feature-chip">
+                <div class="feature-icon">📄</div>
+                <div>
+                    <strong>Instant Report Access</strong>
+                    <span>View water quality reports and PDF documents whenever needed.</span>
+                </div>
+            </div>
+
+            <div class="feature-chip">
+                <div class="feature-icon">🔒</div>
+                <div>
+                    <strong>Protected Accounts</strong>
+                    <span>Strong password rules and secure access for every registered client.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-panel">
+        <div class="auth-card" style="width:min(560px,100%);">
+            <div class="auth-avatar">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <h1>Create account</h1>
+            <p class="auth-subtitle">Join HydraVision and manage your testing journey with ease.</p>
+
+            {% if messages %}
+                <div class="message-list">
+                    {% for message in messages %}
+                        <div class="message error">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <style>
+                .grid-form {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 14px 16px;
+                }
+
+                .grid-form .full {
+                    grid-column: 1 / -1;
+                }
+
+                .hint-text {
+                    display: block;
+                    margin-top: 7px;
+                    color: var(--muted);
+                    font-size: 12px;
+                    line-height: 1.5;
+                }
+
+                .error-text {
+                    display: block;
+                    margin-top: 7px;
+                    color: var(--danger);
+                    font-size: 13px;
+                    font-weight: 600;
+                    min-height: 18px;
+                }
+
+                input[aria-invalid="true"],
+                textarea[aria-invalid="true"] {
+                    border-color: var(--danger);
+                    background: #fff4f7;
+                    box-shadow: 0 0 0 4px rgba(216, 61, 92, 0.08);
+                }
+
+                .register-submit {
+                    width: 100%;
+                    margin-top: 10px;
+                }
+
+                @media (max-width: 640px) {
+                    .grid-form {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+
+            <form method="post" id="registerForm" novalidate>
+                {% csrf_token %}
+
+                <div class="grid-form">
+                    <div>
+                        <label for="username">Username</label>
+                        <input type="text" name="username" id="username"
+                               value="{{ form.username.value|default:'' }}"
+                               required minlength="4" maxlength="150"
+                               aria-describedby="username-hint username-error">
+                        <small id="username-hint" class="hint-text">At least 4 characters.</small>
+                        <small id="username-error" class="error-text" aria-live="polite">
+                            {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="email">Email</label>
+                        <input type="text" name="email" id="email"
+                               value="{{ form.email.value|default:'' }}"
+                               required aria-describedby="email-hint email-error">
+                        <small id="email-hint" class="hint-text">Example: name@gmail.com</small>
+                        <small id="email-error" class="error-text" aria-live="polite">
+                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password"
+                               required aria-describedby="password-hint password-error">
+                        <small id="password-hint" class="hint-text">
+                            Minimum 8 characters, uppercase, lowercase, number, and special character.
+                        </small>
+                        <small id="password-error" class="error-text" aria-live="polite">
+                            {% for error in form.password.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="confirm_password">Confirm Password</label>
+                        <input type="password" name="confirm_password" id="confirm_password"
+                               required aria-describedby="confirm-password-hint confirm-password-error">
+                        <small id="confirm-password-hint" class="hint-text">Must match the password exactly.</small>
+                        <small id="confirm-password-error" class="error-text" aria-live="polite">
+                            {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="name">Full Name</label>
+                        <input type="text" name="name" id="name"
+                               value="{{ form.name.value|default:'' }}"
+                               required maxlength="20"
+                               aria-describedby="name-hint name-error">
+                        <small id="name-hint" class="hint-text">Only letters and spaces, maximum 20 characters.</small>
+                        <small id="name-error" class="error-text" aria-live="polite">
+                            {% for error in form.name.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div>
+                        <label for="phone">Phone Number</label>
+                        <input type="text" name="phone" id="phone"
+                               value="{{ form.phone.value|default:'' }}"
+                               maxlength="10"
+                               aria-describedby="phone-hint phone-error">
+                        <small id="phone-hint" class="hint-text">Enter exactly 10 digits.</small>
+                        <small id="phone-error" class="error-text" aria-live="polite">
+                            {% for error in form.phone.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div class="full">
+                        <label for="address">Address</label>
+                        <textarea name="address" id="address" rows="3"
+                                  aria-describedby="address-hint address-error">{{ form.address.value|default:'' }}</textarea>
+                        <small id="address-hint" class="hint-text">Optional.</small>
+                        <small id="address-error" class="error-text" aria-live="polite">
+                            {% for error in form.address.errors %}{{ error }}{% endfor %}
+                        </small>
+                    </div>
+
+                    <div class="full">
+                        <button type="submit" class="btn register-submit">Create Client Account</button>
+                    </div>
+                </div>
+            </form>
+
+            <p style="margin:18px 0 0; text-align:center; color:var(--muted);">
+                Already have an account?
+                <a href="{% url 'client_login' %}">Login here</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registerForm');
+
+    const fields = {
+        username: document.getElementById('username'),
+        email: document.getElementById('email'),
+        password: document.getElementById('password'),
+        confirm_password: document.getElementById('confirm_password'),
+        name: document.getElementById('name'),
+        phone: document.getElementById('phone')
+    };
+
+    function getErrorBox(input) {
+        return document.getElementById(input.id.replace('_', '-') + '-error') || document.getElementById(input.id + '-error');
+    }
+
+    function showError(input, message) {
+        const errorBox = getErrorBox(input);
+        input.setAttribute('aria-invalid', 'true');
+        input.setCustomValidity(message);
+        if (errorBox) errorBox.textContent = message;
+    }
+
+    function clearError(input) {
+        const errorBox = getErrorBox(input);
+        input.removeAttribute('aria-invalid');
+        input.setCustomValidity('');
+        if (errorBox) errorBox.textContent = '';
+    }
+
+    function validateUsername() {
+        const value = fields.username.value.trim();
+        if (!value) return showError(fields.username, 'Username is required.');
+        if (value.length < 4) return showError(fields.username, 'Username must be at least 4 characters long.');
+        clearError(fields.username);
+    }
+
+    function validateEmail() {
+        const value = fields.email.value.trim();
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!value) return showError(fields.email, 'Email is required.');
+        if (!emailRegex.test(value)) return showError(fields.email, 'Enter a valid email address, for example: name@gmail.com');
+        clearError(fields.email);
+    }
+
+    function validatePassword() {
+        const value = fields.password.value;
+        if (!value) return showError(fields.password, 'Password is required.');
+        if (value.length < 8) return showError(fields.password, 'Password must be at least 8 characters long.');
+        if (!/[A-Z]/.test(value)) return showError(fields.password, 'Password must contain at least one uppercase letter.');
+        if (!/[a-z]/.test(value)) return showError(fields.password, 'Password must contain at least one lowercase letter.');
+        if (!/\d/.test(value)) return showError(fields.password, 'Password must contain at least one number.');
+        if (!/[#?!@$%^&*\-]/.test(value)) return showError(fields.password, 'Password must contain at least one special character.');
+        clearError(fields.password);
+    }
+
+    function validateConfirmPassword() {
+        const value = fields.confirm_password.value;
+        if (!value) return showError(fields.confirm_password, 'Please confirm your password.');
+        if (value !== fields.password.value) return showError(fields.confirm_password, 'Passwords do not match.');
+        clearError(fields.confirm_password);
+    }
+
+    function validateName() {
+        const value = fields.name.value.trim();
+        if (!value) return showError(fields.name, 'Name is required.');
+        if (value.length > 20) return showError(fields.name, 'Name must be 20 characters or less.');
+        if (!/^[A-Za-z ]+$/.test(value)) return showError(fields.name, 'Name should contain only letters and spaces.');
+        clearError(fields.name);
+    }
+
+    function validatePhone() {
+        fields.phone.value = fields.phone.value.replace(/\D/g, '');
+        const value = fields.phone.value;
+        if (value && !/^\d{10}$/.test(value)) return showError(fields.phone, 'Phone number must be exactly 10 digits.');
+        clearError(fields.phone);
+    }
+
+    fields.username.addEventListener('input', validateUsername);
+    fields.email.addEventListener('input', validateEmail);
+    fields.password.addEventListener('input', function () {
+        validatePassword();
+        if (fields.confirm_password.value) validateConfirmPassword();
+    });
+    fields.confirm_password.addEventListener('input', validateConfirmPassword);
+    fields.name.addEventListener('input', validateName);
+    fields.phone.addEventListener('input', validatePhone);
+
+    form.addEventListener('submit', function (e) {
+        validateUsername();
+        validateEmail();
+        validatePassword();
+        validateConfirmPassword();
+        validateName();
+        validatePhone();
+
+        if (!form.checkValidity()) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

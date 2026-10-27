@@ -1,0 +1,872 @@
+{% extends 'base.html' %}
+
+{% block title %}Client Dashboard - HydraVision{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root {
+    --water-primary: #0284c7;
+    --water-deep: #0369a1;
+    --water-cyan: #06b6d4;
+    --water-light: #e0f2fe;
+    --water-card-bg: rgba(255, 255, 255, 0.85);
+    --water-card-border: rgba(186, 230, 253, 0.6);
+    --safe-glow: 0 8px 24px -4px rgba(16, 185, 129, 0.3);
+    --danger-glow: 0 8px 24px -4px rgba(239, 68, 68, 0.3);
+  }
+
+  .water-hero {
+    position: relative;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0c4a6e 100%);
+    color: #ffffff;
+    padding: 48px 32px 64px;
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    box-shadow: 0 12px 32px -8px rgba(2, 132, 199, 0.4);
+  }
+
+  .water-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+  }
+
+  .water-hero h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .water-hero p {
+    color: #e0f2fe;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .ocean-waves {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 48px;
+    z-index: 1;
+  }
+
+  .wave-shape {
+    animation: waveDrift 10s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+    transform: translate3d(0, 0, 0);
+  }
+
+  @keyframes waveDrift {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-25%); }
+    100% { transform: translateX(0); }
+  }
+
+  .dashboard-header {
+    margin-bottom: 28px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+  }
+
+  .dashboard-header .muted {
+    color: #64748b;
+    font-size: 0.95rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    position: relative;
+    background: var(--water-card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--water-card-border);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #38bdf8, #06b6d4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(14, 165, 233, 0.15);
+    border-color: #7dd3fc;
+  }
+
+  .stat-card:hover::before {
+    opacity: 1;
+  }
+
+  .kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .kpi-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .kpi-icon {
+    font-size: 1.1rem;
+    color: #0284c7;
+    background: #e0f2fe;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kpi-value {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .module-card {
+    background: var(--water-card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--water-card-border);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+  }
+
+  .actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .water-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .water-btn.primary {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px -2px rgba(2, 132, 199, 0.4);
+  }
+
+  .water-btn.primary:hover {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px -2px rgba(2, 132, 199, 0.5);
+  }
+
+  .water-btn.secondary {
+    background: #ffffff;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+  }
+
+  .water-btn.secondary:hover {
+    background: #f0f9ff;
+    border-color: #38bdf8;
+    transform: translateY(-2px);
+  }
+
+  .info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #e0f2fe;
+    color: #0284c7;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 36px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .result-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    margin: 12px 0 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .result-banner.success {
+    background: rgba(236, 253, 245, 0.9);
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    box-shadow: var(--safe-glow);
+  }
+
+  .result-banner.danger {
+    background: rgba(254, 242, 242, 0.9);
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    box-shadow: var(--danger-glow);
+  }
+
+  .result-banner.info {
+    background: rgba(224, 242, 254, 0.92);
+    border: 1px solid #bae6fd;
+    color: #075985;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.95rem;
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-row span:first-child {
+    color: #64748b;
+  }
+
+  .detail-row span:last-child {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .journey-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .journey-stat {
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(240, 249, 255, 0.88);
+    border: 1px solid #bae6fd;
+  }
+
+  .journey-stat span {
+    display: block;
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .journey-stat strong {
+    display: block;
+    margin-top: 7px;
+    color: #0f172a;
+    font-size: 1.45rem;
+    line-height: 1.1;
+  }
+
+  .journey-stat.improving {
+    background: rgba(236, 253, 245, 0.9);
+    border-color: #a7f3d0;
+  }
+
+  .journey-stat.improving strong {
+    color: #047857;
+  }
+
+  .journey-stat.attention {
+    background: rgba(254, 242, 242, 0.9);
+    border-color: #fecaca;
+  }
+
+  .journey-stat.attention strong {
+    color: #b91c1c;
+  }
+
+  .journey-stat.stable {
+    background: rgba(255, 251, 235, 0.92);
+    border-color: #fde68a;
+  }
+
+  .journey-stat.stable strong {
+    color: #a16207;
+  }
+
+  .journey-chart-frame {
+    position: relative;
+    height: 220px;
+    width: 100%;
+    padding: 14px 14px 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(143, 232, 255, 0.16);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025)),
+      rgba(6, 28, 42, 0.62);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .journey-chart-frame canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .journey-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    color: rgba(226, 247, 255, 0.75);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .journey-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .journey-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+  }
+
+  .journey-dot.safe {
+    background: #64e5b4;
+    box-shadow: 0 0 9px rgba(100, 229, 180, 0.58);
+  }
+
+  .journey-dot.attention {
+    background: #ff8aa4;
+    box-shadow: 0 0 9px rgba(255, 138, 164, 0.48);
+  }
+
+  .journey-dot.target {
+    width: 14px;
+    height: 0;
+    border-radius: 0;
+    border-top: 2px dashed #ffd76b;
+  }
+
+  .journey-note {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f0f9ff;
+    border-left: 4px solid #0284c7;
+    color: #334155;
+    line-height: 1.6;
+    font-size: 0.94rem;
+  }
+
+  @media (max-width: 900px) {
+    .journey-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .journey-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .journey-chart-frame {
+      height: 210px;
+      padding: 10px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block hero %}
+<div class="water-hero">
+    <div class="water-hero-content">
+        <h2>Your Water Testing Dashboard</h2>
+        <p>
+            Track sample progress, payment status, report readiness, and your water-quality journey over time.
+        </p>
+    </div>
+
+    <svg class="ocean-waves" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none">
+        <defs>
+            <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+        </defs>
+        <g class="wave-shape">
+            <use href="#gentle-wave" x="48" y="0" fill="rgba(255,255,255,0.2)" />
+            <use href="#gentle-wave" x="48" y="3" fill="rgba(255,255,255,0.4)" />
+            <use href="#gentle-wave" x="48" y="5" fill="rgba(255,255,255,0.7)" />
+        </g>
+    </svg>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Client Overview</h1>
+    <p class="muted">
+        Welcome back, <strong>{{ customer.name }}</strong>. Here is your real-time testing and billing status.
+    </p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Total Samples</span>
+            <div class="kpi-icon"><i class="fa-solid fa-flask-vial"></i></div>
+        </div>
+        <div class="kpi-value">{{ total_samples }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Pending</span>
+            <div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        </div>
+        <div class="kpi-value">{{ pending_samples }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Testing</span>
+            <div class="kpi-icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ testing_samples }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Completed</span>
+            <div class="kpi-icon"><i class="fa-solid fa-droplet"></i></div>
+        </div>
+        <div class="kpi-value">{{ completed_samples }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Paid</span>
+            <div class="kpi-icon"><i class="fa-solid fa-receipt"></i></div>
+        </div>
+        <div class="kpi-value">{{ paid_count }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-header">
+            <span class="kpi-label">Reports Ready</span>
+            <div class="kpi-icon"><i class="fa-solid fa-file-waveform"></i></div>
+        </div>
+        <div class="kpi-value">{{ reports_ready }}</div>
+    </div>
+</div>
+
+<div class="module-card">
+    <div class="info-pill"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+
+    <div class="actions-row">
+        <a href="{% url 'sample_create' %}" class="water-btn primary">
+            <i class="fa-solid fa-plus"></i> Register Sample
+        </a>
+
+        <a href="{% url 'sample_list' %}" class="water-btn secondary">
+            <i class="fa-solid fa-list-check"></i> My Samples
+        </a>
+
+        <a href="{% url 'payment_list' %}" class="water-btn secondary">
+            <i class="fa-solid fa-credit-card"></i> My Payments
+        </a>
+
+        <a href="{% url 'report_list' %}" class="water-btn secondary">
+            <i class="fa-solid fa-file-lines"></i> My Reports
+        </a>
+    </div>
+</div>
+
+<h2 class="section-title">
+    <i class="fa-solid fa-chart-line" style="color: var(--water-primary);"></i>
+    Water Purity Journey
+</h2>
+
+<div class="module-card">
+    <div class="info-pill">
+        <i class="fa-solid fa-wave-square"></i>
+        History Analysis
+    </div>
+
+    <div class="journey-grid">
+        <div class="journey-stat">
+            <span>Completed Tests</span>
+            <strong>{{ history_count }}</strong>
+        </div>
+
+        <div class="journey-stat">
+            <span>Latest Score</span>
+            <strong>
+                {% if latest_score is not None %}
+                    {{ latest_score }}/100
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div class="journey-stat">
+            <span>Previous Score</span>
+            <strong>
+                {% if previous_score is not None %}
+                    {{ previous_score }}/100
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+        </div>
+
+        <div class="journey-stat
+            {% if journey_status == 'Improving' %}
+                improving
+            {% elif journey_status == 'Needs Attention' %}
+                attention
+            {% elif journey_status == 'Stable' %}
+                stable
+            {% endif %}
+        ">
+            <span>Water Journey</span>
+            <strong>{{ journey_status }}</strong>
+        </div>
+    </div>
+
+    {% if history_count >= 2 %}
+        <div class="journey-chart-frame">
+            <canvas id="purityJourneyChart"></canvas>
+        </div>
+
+        <div class="journey-legend">
+            <span class="journey-legend-item">
+                <span class="journey-dot safe"></span>
+                Safe result
+            </span>
+
+            <span class="journey-legend-item">
+                <span class="journey-dot attention"></span>
+                Needs attention
+            </span>
+
+            <span class="journey-legend-item">
+                <span class="journey-dot target"></span>
+                Good score target: 80+
+            </span>
+        </div>
+    {% else %}
+        <div class="result-banner info">
+            <i class="fa-solid fa-circle-info" style="font-size:1.25rem; margin-top:2px;"></i>
+            <div>
+                <strong>History graph will appear after your next completed test.</strong><br>
+                A minimum of two completed results is required to show whether water quality is improving, stable, or needs attention.
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="journey-note">
+        <strong>Analysis:</strong> {{ journey_message }}
+        <br>
+        <span>
+            Safe tests: {{ safe_tests_count }} &nbsp;•&nbsp;
+            Tests needing attention: {{ unsafe_tests_count }}
+        </span>
+    </div>
+</div>
+
+{% if latest_test %}
+<h2 class="section-title">
+    <i class="fa-solid fa-chart-simple" style="color: var(--water-primary);"></i>
+    Latest Result Summary
+</h2>
+
+<div class="results-grid">
+    <div class="module-card">
+        <div class="info-pill"><i class="fa-solid fa-tag"></i> Sample Details</div>
+
+        <div style="margin-top: 14px;">
+            <div class="detail-row">
+                <span>Sample Code</span>
+                <span>{{ latest_test.sample.sample_code }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span>Test Date</span>
+                <span>{{ latest_test.test_date }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="module-card">
+        <div class="info-pill"><i class="fa-solid fa-shield-halved"></i> Water Quality</div>
+
+        {% if latest_test.bis_status == 'Safe' %}
+            <div class="result-banner success">
+                <i class="fa-solid fa-circle-check" style="font-size: 1.25rem; margin-top: 2px;"></i>
+                <div>
+                    <strong>Safe Water Sample</strong><br>
+                    Tested parameters fall within the configured acceptable limits.
+                </div>
+            </div>
+        {% else %}
+            <div class="result-banner danger">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.25rem; margin-top: 2px;"></i>
+                <div>
+                    <strong>Action Required</strong><br>
+                    Water needs treatment. Please review recommendations prior to use.
+                </div>
+            </div>
+        {% endif %}
+
+        <div style="margin-top: 8px;">
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">
+                Recommendation:
+            </span>
+
+            <p style="margin: 4px 0 0; color: #334155; font-size: 0.95rem; line-height: 1.5;">
+                {{ latest_test.recommendation }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const purityJourneyCanvas = document.getElementById('purityJourneyChart');
+
+    if (!purityJourneyCanvas) {
+        return;
+    }
+
+    const labels = {{ history_labels|safe }};
+    const scores = {{ history_scores|safe }};
+    const statuses = {{ history_statuses|safe }};
+
+    const pointColors = statuses.map(function (status) {
+        return status === 'Safe' ? '#64e5b4' : '#ff8aa4';
+    });
+
+    const pointBorderColors = statuses.map(function (status) {
+        return status === 'Safe' ? '#1d9b6a' : '#d4506d';
+    });
+
+    const scoreLabelPlugin = {
+        id: 'scoreLabelPlugin',
+        afterDatasetsDraw: function (chart) {
+            const context = chart.ctx;
+            const meta = chart.getDatasetMeta(0);
+
+            context.save();
+            context.font = '700 11px Manrope, Arial, sans-serif';
+            context.textAlign = 'center';
+            context.textBaseline = 'bottom';
+
+            meta.data.forEach(function (point, index) {
+                const score = scores[index];
+
+                context.fillStyle = statuses[index] === 'Safe'
+                    ? '#bff4da'
+                    : '#ffc0d0';
+
+                context.fillText(
+                    score + '/100',
+                    point.x,
+                    point.y - 12
+                );
+            });
+
+            context.restore();
+        }
+    };
+
+    new Chart(purityJourneyCanvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Water Quality Score',
+                    data: scores,
+                    borderColor: '#72dbff',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2.5,
+                    fill: false,
+                    tension: 0.26,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: pointBorderColors,
+                    pointBorderWidth: 2.5
+                },
+                {
+                    label: 'Good score target',
+                    data: scores.map(function () {
+                        return 80;
+                    }),
+                    borderColor: 'rgba(255, 215, 107, 0.70)',
+                    borderWidth: 1.5,
+                    borderDash: [6, 6],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        plugins: [scoreLabelPlugin],
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            layout: {
+                padding: {
+                    top: 18,
+                    right: 12,
+                    left: 2,
+                    bottom: 0
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#071c29',
+                    titleColor: '#f3fbff',
+                    bodyColor: '#d9f3ff',
+                    borderColor: 'rgba(143, 232, 255, 0.20)',
+                    borderWidth: 1,
+                    padding: 11,
+                    displayColors: false,
+                    callbacks: {
+                        label: function (context) {
+                            if (context.datasetIndex === 1) {
+                                return 'Good score target: 80+/100';
+                            }
+
+                            const status = statuses[context.dataIndex];
+
+                            return (
+                                'Score: ' +
+                                context.parsed.y +
+                                '/100 • ' +
+                                status
+                            );
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: 'rgba(219, 245, 255, 0.72)',
+                        font: {
+                            size: 10,
+                            weight: '600'
+                        },
+                        maxRotation: 0,
+                        autoSkip: false
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(143, 232, 255, 0.14)'
+                    }
+                },
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        color: 'rgba(219, 245, 255, 0.65)',
+                        font: {
+                            size: 10
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(143, 232, 255, 0.10)'
+                    },
+                    border: {
+                        color: 'rgba(143, 232, 255, 0.14)'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

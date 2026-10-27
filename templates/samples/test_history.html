@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Test History - HydraVision{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Laboratory test history</h2>
+    <p>
+        Search completed and ongoing water sample records by sample code,
+        customer, source, or collection date.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>View Test History</h1>
+
+<form method="get" style="margin-bottom: 20px;">
+    <input
+        type="text"
+        name="q"
+        value="{{ query }}"
+        placeholder="Search by Sample Code, Customer Name, Date, Water Source"
+    >
+    <button type="submit" class="btn">Search</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Sample Code</th>
+            <th>Customer</th>
+            <th>Water Source</th>
+            <th>Collection Date</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sample in samples %}
+        <tr>
+            <td>{{ sample.sample_code|default:sample.pk }}</td>
+            <td>{{ sample.customer.name }}</td>
+            <td>{{ sample.water_source }}</td>
+            <td>{{ sample.collection_date }}</td>
+            <td>{{ sample.sample_status }}</td>
+            <td>
+                <a href="{% url 'sample_detail' sample.pk %}">View</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No history found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

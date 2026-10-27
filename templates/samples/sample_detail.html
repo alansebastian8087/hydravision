@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+
+{% block title %}Sample Details - HydraVision{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .banner {
+    padding: 18px 20px;
+    margin: 18px 0 22px;
+    border-radius: 18px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    line-height: 1.7;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .banner.success {
+    background: rgba(13, 155, 120, 0.14);
+    border-color: rgba(122, 240, 195, 0.16);
+    color: #7af0c3;
+  }
+
+  .banner.warning {
+    background: rgba(255, 193, 7, 0.14);
+    border-color: rgba(255, 216, 109, 0.16);
+    color: #ffd86d;
+  }
+
+  .banner.danger {
+    background: rgba(216, 61, 92, 0.15);
+    border-color: rgba(255, 157, 177, 0.16);
+    color: #ff9db1;
+  }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .module-card,
+  .parameter-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(150, 220, 242, 0.12);
+    border-radius: 24px;
+    padding: 22px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .module-card.full {
+    grid-column: 1 / -1;
+  }
+
+  .info-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 13px;
+    margin-bottom: 16px;
+    border-radius: 999px;
+    background: rgba(54, 180, 229, 0.12);
+    border: 1px solid rgba(126, 207, 232, 0.16);
+    color: #dff7ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .module-card p,
+  .parameter-card p {
+    margin: 0 0 12px;
+    color: #d9edf6;
+    line-height: 1.75;
+    font-size: 15px;
+  }
+
+  .module-card p strong,
+  .parameter-card p strong {
+    color: #f2fbff;
+  }
+
+  .module-card p:last-child,
+  .parameter-card p:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-title {
+    margin: 30px 0 16px;
+    font-size: 24px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #ecfbff;
+    font-family: Outfit, sans-serif;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .status-chip.success {
+    color: #7af0c3;
+    background: rgba(13, 155, 120, 0.14);
+    border-color: rgba(122, 240, 195, 0.16);
+  }
+
+  .status-chip.warning {
+    color: #ffd86d;
+    background: rgba(255, 193, 7, 0.14);
+    border-color: rgba(255, 216, 109, 0.16);
+  }
+
+  .status-chip.danger {
+    color: #ff9db1;
+    background: rgba(216, 61, 92, 0.15);
+    border-color: rgba(255, 157, 177, 0.16);
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  .btn.muted {
+    background: rgba(255,255,255,0.08);
+    color: #dff7ff;
+    border: 1px solid rgba(150, 220, 242, 0.12);
+    box-shadow: none;
+  }
+
+  .parameter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .parameter-card h4 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    color: #ecfbff;
+    font-family: Outfit, sans-serif;
+  }
+
+  .parameter-value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10px;
+    color: #7fdfff;
+    font-family: Outfit, sans-serif;
+  }
+
+  .muted {
+    color: #9bb9c8;
+  }
+
+  .chart-shell {
+    position: relative;
+    height: 220px;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(54,180,229,0.08));
+    border: 1px solid rgba(150, 220, 242, 0.12);
+    border-radius: 20px;
+    padding: 14px;
+  }
+
+  .qr-image {
+    display: block;
+    width: 170px;
+    max-width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+  }
+
+  @media (max-width: 1100px) {
+    .parameter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 860px) {
+    .module-grid,
+    .parameter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .module-card,
+    .parameter-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .section-title {
+      font-size: 21px;
+      margin-top: 24px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Sample {{ sample.sample_code }} overview</h2>
+    <p>
+        Review registration details, payment approval, laboratory result, and report access in one page.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:8px;">Sample Details</h1>
+
+<div class="banner {{ client_result_summary.tone }}">
+    <strong>{{ client_result_summary.headline }}</strong><br>
+    {{ client_result_summary.message }}
+</div>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        <div class="info-pill">Sample Information</div>
+        <p><strong>Customer:</strong> {{ sample.customer.name }}</p>
+        <p><strong>Water Source:</strong> {{ sample.water_source }}</p>
+        <p><strong>Sample Type:</strong> {{ sample.sample_type|default:"-" }}</p>
+        <p><strong>Collection Date:</strong> {{ sample.collection_date|date:"Y-m-d"|default:"-" }}</p>
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Payment & Report</div>
+
+        <p>
+            <strong>Payment:</strong>
+            {% if payment %}
+                {% if payment.payment_status == 'Paid' %}
+                    <span class="status-chip success">Approved</span>
+                {% else %}
+                    <span class="status-chip warning">Awaiting Approval</span>
+                {% endif %}
+            {% else %}
+                <span class="status-chip danger">Not Added</span>
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Report:</strong>
+            {% if report %}
+                <span class="status-chip success">Available</span>
+            {% else %}
+                <span class="status-chip warning">Not Generated</span>
+            {% endif %}
+        </p>
+
+        {% if role == 'Lab Technician' or role == 'Admin' %}
+            <div class="actions-row">
+                {% if water_test and can_generate_report %}
+                    <a href="{% url 'generate_report' water_test.pk %}" class="btn">
+                        Generate Report
+                    </a>
+                {% elif water_test %}
+                    <a href="#" class="btn muted" onclick="return false;">
+                        Payment Approval Required
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if water_test %}
+<h2 class="section-title">Client-Friendly Final Result</h2>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        {% if water_test.bis_status == 'Safe' %}
+            <div class="banner success">
+                This water sample is <strong>Safe</strong> based on the tested parameters.
+            </div>
+        {% else %}
+            <div class="banner danger">
+                This water sample <strong>Needs Treatment</strong> before safe use.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Recommendation</div>
+        <p style="font-size:16px; line-height:1.7;">
+            <strong>{{ water_test.recommendation }}</strong>
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{% if report %}
+<h2 class="section-title">Generated Report</h2>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        <div class="info-pill">Water Quality Report</div>
+
+        <p>
+            <strong>Report Status:</strong>
+            <span class="status-chip success">Available</span>
+        </p>
+
+        <p class="muted">
+            Your laboratory water-quality report has been generated and is ready to view or download.
+        </p>
+
+        {% if report.pdf_file %}
+            <div class="actions-row">
+                <a
+                    href="{{ report.pdf_file.url }}"
+                    class="btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    View / Download PDF Report
+                </a>
+            </div>
+        {% else %}
+            <div class="banner warning">
+                The report is available, but its PDF file is not attached yet.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">QR Verification</div>
+
+        {% if report.qr_code %}
+            <p class="muted">
+                Scan this QR code to open and verify your HydraVision water-quality report.
+            </p>
+
+            <img
+                src="{{ report.qr_code.url }}"
+                alt="QR code for HydraVision report verification"
+                class="qr-image"
+            >
+        {% else %}
+            <div class="banner warning">
+                QR code is not available for this report yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<h2 class="section-title">Parameter Graph</h2>
+
+<div class="module-grid">
+    <div class="module-card full">
+        {% if parameter_cards %}
+            <div class="chart-shell">
+                <canvas id="sampleChart"></canvas>
+            </div>
+        {% else %}
+            <div class="banner warning">
+                No parameter values available yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="section-title">Parameter Cards</h2>
+
+<div class="parameter-grid">
+    {% for item in parameter_cards %}
+        <div class="parameter-card">
+            <h4>{{ item.name }}</h4>
+            <div class="parameter-value">{{ item.value }}</div>
+            <div class="muted">BIS reference: {{ item.limit }}</div>
+
+            {% if item.ok %}
+                <div style="margin-top:10px;">
+                    <span class="status-chip success">{{ item.status }}</span>
+                </div>
+            {% else %}
+                <div style="margin-top:10px;">
+                    <span class="status-chip danger">{{ item.status }}</span>
+                </div>
+            {% endif %}
+        </div>
+    {% empty %}
+        <div class="banner warning">
+            No parameter values available yet.
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const canvas = document.getElementById('sampleChart');
+
+    if (!canvas) return;
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Measured Value',
+                data: {{ chart_values|safe }},
+                backgroundColor: 'rgba(54, 180, 229, 0.78)',
+                borderColor: '#8edfff',
+                borderWidth: 1.2,
+                borderRadius: 6,
+                barThickness: 22,
+                maxBarThickness: 24
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#cfe8f3',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(150, 220, 242, 0.08)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#cfe8f3',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(150, 220, 242, 0.08)'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

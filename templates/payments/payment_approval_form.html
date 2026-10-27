@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Approve Payment - HydraVision{% endblock %}
+
+{% block content %}
+<h1>{{ page_title }}</h1>
+<p class="muted">Confirm this payment and mark it as approved.</p>
+
+<div class="module-grid">
+    <div class="module-card wide">
+        <div class="info-pill">Payment Details</div>
+        <p><strong>Sample:</strong> {{ payment.sample.sample_code }}</p>
+        <p><strong>Customer:</strong> {{ payment.sample.customer.name }}</p>
+        <p><strong>Fixed Amount:</strong> ₹{{ fixed_amount }}</p>
+        <p><strong>Current Status:</strong> {{ payment.payment_status }}</p>
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Approval</div>
+        <div class="banner success">
+            Clicking confirm will approve the payment and set the status to Paid.
+        </div>
+    </div>
+</div>
+
+<div class="module-grid" style="margin-top:18px;">
+    <div class="module-card full">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions-row">
+                <button type="submit" class="btn">Confirm Approval</button>
+                <a href="{% url 'payment_list' %}" class="btn secondary">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

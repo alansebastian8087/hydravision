@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Payment - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Delete Payment</h1>
+
+<div class="banner danger">
+    You are about to delete the payment record for sample <strong>{{ payment.sample.sample_code }}</strong>.
+</div>
+
+<div class="module-grid">
+    <div class="module-card full">
+        <p><strong>Sample:</strong> {{ payment.sample.sample_code }}</p>
+        <p><strong>Customer:</strong> {{ payment.sample.customer.name }}</p>
+        <p><strong>Amount:</strong> {{ payment.amount }}</p>
+        <p><strong>Status:</strong> {{ payment.payment_status }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="actions-row">
+                <button type="submit" class="btn danger">Yes, Delete</button>
+                <a href="{% url 'payment_list' %}" class="btn secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

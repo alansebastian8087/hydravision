@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - HydraVision{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /*
+      Dashboard graph-only improvements:
+      Existing headings, data, links, and functionality are preserved.
+      These rules control chart sizing and responsive layout only.
+    */
+
+    .dashboard-chart-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 20px;
+        margin-top: 16px;
+    }
+
+    .dashboard-chart-card {
+        min-width: 0;
+        padding: 22px;
+    }
+
+    .dashboard-chart-card.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .chart-heading {
+        margin: 0 0 4px;
+        color: #ecfbff;
+        font-family: Outfit, sans-serif;
+        font-size: 19px;
+        line-height: 1.25;
+    }
+
+    .chart-description {
+        margin: 0 0 18px;
+        color: #9bb9c8;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .chart-frame {
+        position: relative;
+        width: 100%;
+        height: 320px;
+        padding: 12px;
+        border: 1px solid rgba(150, 220, 242, 0.12);
+        border-radius: 18px;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(255,255,255,0.05),
+                rgba(54,180,229,0.06)
+            );
+    }
+
+    .chart-frame.chart-frame-large {
+        height: 380px;
+    }
+
+    .chart-frame canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-chart-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-chart-card.full-width {
+            grid-column: auto;
+        }
+
+        .chart-frame,
+        .chart-frame.chart-frame-large {
+            height: 300px;
+        }
+    }
+
+    @media (max-width: 560px) {
+        .dashboard-chart-card {
+            padding: 18px;
+        }
+
+        .chart-frame,
+        .chart-frame.chart-frame-large {
+            height: 270px;
+            padding: 8px;
+        }
+
+        .chart-heading {
+            font-size: 18px;
+        }
+
+        .chart-description {
+            font-size: 13px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<div class="hero">
+    <h2>Admin control center</h2>
+    <p>
+        Monitor customers, samples, testing workflow, payments, and report generation from a single executive dashboard.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>HydraVision Dashboard</h1>
+<p class="muted">
+    A better operational view of your current system, without changing the existing business flow.
+</p>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="kpi-label">Customers</div>
+        <div class="kpi-value">{{ total_customers }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-label">Samples</div>
+        <div class="kpi-value">{{ total_samples }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-label">Water Tests</div>
+        <div class="kpi-value">{{ total_water_tests }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-label">Reports</div>
+        <div class="kpi-value">{{ total_reports }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-label">Payments</div>
+        <div class="kpi-value">{{ total_payments }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="kpi-label">Paid / Pending</div>
+        <div class="kpi-value">{{ paid_payments }} / {{ pending_payments }}</div>
+    </div>
+</div>
+
+<div class="module-grid" style="margin-top:20px;">
+    <div class="module-card wide">
+        <div class="info-pill">Sample Workflow</div>
+        <p><strong>Pending:</strong> {{ pending_samples }}</p>
+        <p><strong>Testing:</strong> {{ testing_samples }}</p>
+        <p><strong>Completed:</strong> {{ completed_samples }}</p>
+        <p><strong>Report Generated:</strong> {{ generated_reports }}</p>
+
+        <div class="actions-row">
+            <a href="{% url 'customer_list' %}" class="btn secondary">Customers</a>
+            <a href="{% url 'sample_list' %}" class="btn secondary">Samples</a>
+            <a href="{% url 'payment_list' %}" class="btn secondary">Payments</a>
+            <a href="{% url 'report_list' %}" class="btn secondary">Reports</a>
+        </div>
+    </div>
+
+    <div class="module-card wide">
+        <div class="info-pill">Release Rule</div>
+        <h3>Payment before report generation</h3>
+        <p class="muted">
+            The workflow now visually supports a release gate where report generation should happen only after payment is marked as Paid and testing is complete.
+        </p>
+    </div>
+</div>
+
+<h2 class="section-title">Seasonal Sample Analysis</h2>
+
+<div class="dashboard-chart-grid">
+    <div class="module-card dashboard-chart-card full-width">
+        <h3 class="chart-heading">Samples by Season</h3>
+        <p class="chart-description">
+            Distribution of registered water samples across Summer, Monsoon, and Winter.
+        </p>
+
+        <div class="chart-frame chart-frame-large">
+            <canvas id="seasonChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<h2 class="section-title">Payment Status Analysis</h2>
+
+<div class="dashboard-chart-grid">
+    <div class="module-card dashboard-chart-card">
+        <h3 class="chart-heading">Paid and Pending Payments</h3>
+        <p class="chart-description">
+            Current payment distribution across all registered water samples.
+        </p>
+
+        <div class="chart-frame">
+            <canvas id="paymentChart"></canvas>
+        </div>
+    </div>
+
+    <div class="module-card dashboard-chart-card">
+        <h3 class="chart-heading">Sample Workflow Status</h3>
+        <p class="chart-description">
+            Current position of samples in the laboratory processing workflow.
+        </p>
+
+        <div class="chart-frame">
+            <canvas id="workflowChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const seasonCanvas = document.getElementById('seasonChart');
+    const paymentCanvas = document.getElementById('paymentChart');
+    const workflowCanvas = document.getElementById('workflowChart');
+
+    const chartTextColor = '#cfe8f3';
+    const gridColor = 'rgba(150, 220, 242, 0.12)';
+
+    if (seasonCanvas) {
+        new Chart(seasonCanvas, {
+            type: 'bar',
+            data: {
+                labels: ['Summer', 'Monsoon', 'Winter'],
+                datasets: [{
+                    label: 'Number of Samples',
+                    data: [
+                        {{ summer_samples }},
+                        {{ monsoon_samples }},
+                        {{ winter_samples }}
+                    ],
+                    backgroundColor: [
+                        'rgba(90, 210, 255, 0.72)',
+                        'rgba(78, 218, 170, 0.72)',
+                        'rgba(255, 202, 102, 0.72)'
+                    ],
+                    borderColor: [
+                        '#8edfff',
+                        '#7af0c3',
+                        '#ffd86d'
+                    ],
+                    borderWidth: 1.2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    maxBarThickness: 88
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 700
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#092333',
+                        titleColor: '#f0fbff',
+                        bodyColor: '#cfe8f3',
+                        borderColor: 'rgba(150, 220, 242, 0.20)',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: chartTextColor,
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        border: {
+                            color: gridColor
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: chartTextColor,
+                            precision: 0,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: gridColor
+                        },
+                        border: {
+                            color: gridColor
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    if (paymentCanvas) {
+        new Chart(paymentCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Pending'],
+                datasets: [{
+                    data: [
+                        {{ paid_payments }},
+                        {{ pending_payments }}
+                    ],
+                    backgroundColor: [
+                        'rgba(88, 217, 162, 0.82)',
+                        'rgba(255, 196, 92, 0.82)'
+                    ],
+                    borderColor: '#0c2432',
+                    borderWidth: 5,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                animation: {
+                    animateRotate: true,
+                    duration: 800
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: chartTextColor,
+                            padding: 18,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#092333',
+                        titleColor: '#f0fbff',
+                        bodyColor: '#cfe8f3',
+                        borderColor: 'rgba(150, 220, 242, 0.20)',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+
+    if (workflowCanvas) {
+        new Chart(workflowCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    'Pending',
+                    'Testing',
+                    'Completed',
+                    'Report Generated'
+                ],
+                datasets: [{
+                    data: [
+                        {{ pending_samples }},
+                        {{ testing_samples }},
+                        {{ completed_samples }},
+                        {{ generated_reports }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 196, 92, 0.82)',
+                        'rgba(90, 210, 255, 0.82)',
+                        'rgba(124, 226, 185, 0.82)',
+                        'rgba(159, 129, 255, 0.82)'
+                    ],
+                    borderColor: '#0c2432',
+                    borderWidth: 5,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                animation: {
+                    animateRotate: true,
+                    duration: 800
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: chartTextColor,
+                            padding: 14,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: {
+                                size: 11,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#092333',
+                        titleColor: '#f0fbff',
+                        bodyColor: '#cfe8f3',
+                        borderColor: 'rgba(150, 220, 242, 0.20)',
+                        borderWidth: 1,
+                        padding: 12
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,750 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Detail - HydraVision{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(56, 189, 248, 0.14), transparent 18%),
+      radial-gradient(circle at 84% 24%, rgba(143, 232, 255, 0.10), transparent 16%),
+      radial-gradient(circle at 50% 85%, rgba(18, 146, 200, 0.10), transparent 18%),
+      linear-gradient(180deg, #05131f 0%, #08263a 18%, #0b3953 44%, #0c5e88 72%, #1174a3 100%);
+    overflow-x: hidden;
+  }
+
+  .container {
+    width: min(1320px, 96%);
+    margin: 20px auto 36px;
+  }
+
+  .report-world {
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 170px);
+    border-radius: 34px;
+    padding: 32px 22px 40px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 18%),
+      radial-gradient(circle at 80% 30%, rgba(143,232,255,0.08), transparent 18%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 30px 60px rgba(2, 16, 27, 0.22);
+    backdrop-filter: blur(8px);
+  }
+
+  .report-world::before,
+  .report-world::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -40px 0;
+    height: 280px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .report-world::before {
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.10), transparent 65%);
+    animation: swell 12s ease-in-out infinite alternate;
+  }
+
+  .report-world::after {
+    background: linear-gradient(180deg, rgba(143,232,255,0.08), rgba(255,255,255,0.02));
+    filter: blur(16px);
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+
+  .bubble-layer,
+  .ripple-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), rgba(255,255,255,0.06));
+    border: 1px solid rgba(255,255,255,0.16);
+    opacity: 0.35;
+    animation: bubbleRise linear infinite;
+  }
+
+  .b1 { left: 8%; width: 14px; height: 14px; animation-duration: 14s; }
+  .b2 { left: 18%; width: 10px; height: 10px; animation-duration: 12s; animation-delay: -4s; }
+  .b3 { left: 34%; width: 18px; height: 18px; animation-duration: 17s; animation-delay: -7s; }
+  .b4 { left: 48%; width: 12px; height: 12px; animation-duration: 11s; animation-delay: -2s; }
+  .b5 { left: 64%; width: 20px; height: 20px; animation-duration: 18s; animation-delay: -5s; }
+  .b6 { left: 78%; width: 10px; height: 10px; animation-duration: 13s; animation-delay: -8s; }
+  .b7 { left: 90%; width: 15px; height: 15px; animation-duration: 15s; animation-delay: -3s; }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+    transform: translate(-50%, -50%) scale(0.5);
+    animation: ripplePulse 8s ease-out infinite;
+  }
+
+  .r1 { left: 20%; top: 30%; width: 220px; height: 220px; }
+  .r2 { left: 78%; top: 24%; width: 280px; height: 280px; animation-delay: 2s; }
+  .r3 { left: 64%; top: 72%; width: 240px; height: 240px; animation-delay: 4s; }
+
+  .report-stage {
+    position: relative;
+    z-index: 2;
+    max-width: 1220px;
+    margin: 0 auto;
+  }
+
+  .hero-block {
+    text-align: center;
+    margin-bottom: 26px;
+    animation: fadeRise 0.8s ease both;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #def7ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .hero-tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aefff;
+    box-shadow: 0 0 12px rgba(154,239,255,0.9);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .hero-block h1 {
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(44px, 6vw, 78px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  }
+
+  .hero-block p {
+    max-width: 780px;
+    margin: 16px auto 0;
+    color: rgba(235,248,255,0.84);
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .glass-panel {
+    grid-column: span 6;
+    padding: 24px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(14px);
+  }
+
+  .glass-panel.full {
+    grid-column: 1 / -1;
+  }
+
+  .panel-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    background: rgba(143,232,255,0.08);
+    border: 1px solid rgba(143,232,255,0.18);
+    color: #dff9ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .panel-title {
+    margin: 0 0 16px;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1.15;
+  }
+
+  .meta-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .meta-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .meta-label {
+    color: rgba(233,248,255,0.66);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .meta-value {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .status-chip {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .status-chip.success {
+    color: #bff4da !important;
+    background: rgba(36, 119, 84, 0.24) !important;
+    border-color: rgba(126, 240, 198, 0.18) !important;
+  }
+
+  .status-chip.warning {
+    color: #ffe7a5 !important;
+    background: rgba(143, 111, 27, 0.24) !important;
+    border-color: rgba(255, 224, 138, 0.16) !important;
+  }
+
+  .status-chip.danger {
+    color: #ffc0d0 !important;
+    background: rgba(132, 24, 51, 0.24) !important;
+    border-color: rgba(255, 139, 167, 0.20) !important;
+  }
+
+  .status-chip.info {
+    color: #b7f0ff !important;
+    background: rgba(18, 94, 132, 0.24) !important;
+    border-color: rgba(143, 232, 255, 0.18) !important;
+  }
+
+  .result-banner {
+    padding: 16px 18px;
+    border-radius: 18px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    font-weight: 700;
+  }
+
+  .result-banner.success {
+    color: #d7ffea;
+    background: rgba(25, 120, 76, 0.24);
+    border: 1px solid rgba(126, 240, 198, 0.18);
+  }
+
+  .result-banner.danger {
+    color: #ffd6e0;
+    background: rgba(132, 24, 51, 0.24);
+    border: 1px solid rgba(255, 139, 167, 0.20);
+  }
+
+  .result-banner.warning {
+    color: #ffe8b0;
+    background: rgba(143, 111, 27, 0.24);
+    border: 1px solid rgba(255, 224, 138, 0.18);
+  }
+
+  .info-stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .info-item {
+    color: rgba(235,248,255,0.84);
+    line-height: 1.75;
+  }
+
+  .info-item strong {
+    color: #ffffff;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+  }
+
+  .water-btn,
+  .ghost-btn,
+  .file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.25s ease;
+  }
+
+  .water-btn {
+    color: #03202f;
+    background: linear-gradient(135deg, #c8f7ff 0%, #84e9ff 48%, #5ad2ff 100%);
+    border: 1px solid rgba(143,232,255,0.24);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.16);
+  }
+
+  .ghost-btn,
+  .file-btn {
+    color: #effcff;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .water-btn:hover,
+  .ghost-btn:hover,
+  .file-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .section-title {
+    margin: 28px 0 14px;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .qr-card,
+  .chart-shell,
+  .table-shell {
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(7, 25, 38, 0.82);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 24px 50px rgba(2, 16, 27, 0.20);
+  }
+
+  .qr-card {
+    padding: 22px;
+  }
+
+  .qr-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+  }
+
+  .qr-preview img {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    border-radius: 14px;
+    display: block;
+    background: #ffffff;
+  }
+
+  .chart-shell {
+    padding: 22px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 280px;
+    width: 100%;
+  }
+
+  .table-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  }
+
+  .table-headline h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+  }
+
+  .table-headline span {
+    color: rgba(233,248,255,0.68);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+    min-width: 720px;
+  }
+
+  th {
+    text-align: left;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.04);
+    color: #dcf8ff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 18px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    vertical-align: middle;
+    color: #f3fbff;
+    font-size: 14px;
+  }
+
+  tr:hover td {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .empty-row td {
+    text-align: center;
+    color: rgba(233,248,255,0.72);
+  }
+
+  @keyframes bubbleRise {
+    0% { transform: translateY(0) scale(0.9); opacity: 0; }
+    15% { opacity: 0.34; }
+    100% { transform: translateY(-110vh) scale(1.1); opacity: 0; }
+  }
+
+  @keyframes ripplePulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    30% { opacity: 0.24; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+  }
+
+  @keyframes fadeRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes swell {
+    from { transform: translateY(0) scaleX(1); }
+    to { transform: translateY(-12px) scaleX(1.04); }
+  }
+
+  @keyframes drift {
+    from { transform: translateX(-2%); }
+    to { transform: translateX(2%); }
+  }
+
+  @media (max-width: 980px) {
+    .glass-panel {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .report-world {
+      padding: 24px 14px 30px;
+      border-radius: 26px;
+    }
+
+    .hero-block h1 {
+      font-size: 42px;
+    }
+
+    .chart-wrap {
+      height: 240px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .actions-row {
+      flex-direction: column;
+    }
+
+    .water-btn,
+    .ghost-btn,
+    .file-btn {
+      width: 100%;
+    }
+
+    .qr-preview img {
+      width: 130px;
+      height: 130px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="report-world">
+  <div class="bubble-layer">
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
+    <span class="bubble b4"></span>
+    <span class="bubble b5"></span>
+    <span class="bubble b6"></span>
+    <span class="bubble b7"></span>
+  </div>
+
+  <div class="ripple-layer">
+    <span class="ripple r1"></span>
+    <span class="ripple r2"></span>
+    <span class="ripple r3"></span>
+  </div>
+
+  <div class="report-stage">
+    <div class="hero-block">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Laboratory Report
+      </div>
+      <h1>Report {{ report.sample.sample_code }}</h1>
+      <p>
+        Review the released laboratory report, measured parameter graph, and downloadable PDF export.
+      </p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="glass-panel">
+        <div class="panel-tag">Report Summary</div>
+        <h2 class="panel-title">Released Document</h2>
+
+        <div class="meta-list">
+          <div class="meta-row">
+            <div class="meta-label">Sample Code</div>
+            <div class="meta-value">{{ report.sample.sample_code }}</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Customer</div>
+            <div class="meta-value">{{ report.sample.customer.name }}</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Generated On</div>
+            <div class="meta-value">{{ report.generated_on }}</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Payment</div>
+            <div class="meta-value">
+              {% if payment and payment.payment_status == 'Paid' %}
+                <span class="status-chip success">Approved</span>
+              {% else %}
+                <span class="status-chip warning">Awaiting Approval</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          {% if report.pdf_file %}
+            <a href="{{ report.pdf_file.url }}" target="_blank" rel="noopener noreferrer" class="water-btn">Open PDF</a>
+          {% endif %}
+          <a href="{% url 'report_list' %}" class="ghost-btn">Back to Reports</a>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <div class="panel-tag">Result Status</div>
+        <h2 class="panel-title">Water Safety Outcome</h2>
+
+        {% if report.water_test.bis_status == 'Safe' %}
+          <div class="result-banner success"><strong>Final Result:</strong> Safe water sample.</div>
+        {% else %}
+          <div class="result-banner danger"><strong>Final Result:</strong> Water needs treatment.</div>
+        {% endif %}
+
+        <div class="info-stack">
+          <div class="info-item"><strong>Recommendation:</strong> {{ report.water_test.recommendation }}</div>
+          <div class="info-item"><strong>Water Quality Score:</strong> {{ report.water_test.water_quality_score }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% if report.qr_code %}
+    <h2 class="section-title">QR Verification</h2>
+    <div class="qr-card">
+      <div class="qr-preview">
+        <img src="{{ report.qr_code.url }}" alt="QR Code">
+      </div>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">Parameter Graph</h2>
+    <div class="chart-shell">
+      {% if test_result %}
+        <div class="chart-wrap">
+          <canvas id="reportChart" aria-label="Measured parameter chart" role="img"></canvas>
+        </div>
+      {% else %}
+        <div class="result-banner warning">No parameter data available for chart rendering.</div>
+      {% endif %}
+    </div>
+
+    <h2 class="section-title">Measured Parameters</h2>
+    <div class="table-shell">
+      <div class="table-headline">
+        <h3>Measured Values</h3>
+        <span>Measured results with BIS reference values</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Parameter</th>
+            <th>Measured Value</th>
+            <th>BIS Reference</th>
+          </tr>
+          {% for name, value, ref in parameter_rows %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ value }}</td>
+            <td>{{ ref }}</td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row">
+            <td colspan="3">No parameter rows available.</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const canvas = document.getElementById('reportChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Measured Value',
+                data: {{ chart_values|safe }},
+                backgroundColor: 'rgba(113, 226, 255, 0.78)',
+                borderColor: '#8fe8ff',
+                borderWidth: 1.2,
+                borderRadius: 8,
+                barThickness: 22,
+                maxBarThickness: 24,
+                hoverBackgroundColor: 'rgba(154, 239, 255, 0.92)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 700
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(7, 25, 38, 0.96)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#dff9ff',
+                    borderColor: 'rgba(143, 232, 255, 0.20)',
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#dff9ff',
+                        font: { size: 11, weight: '600' }
+                    },
+                    grid: {
+                        display: false
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,0.12)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#dff9ff',
+                        font: { size: 11 }
+                    },
+                    grid: {
+                        color: 'rgba(255,255,255,0.08)'
+                    },
+                    border: {
+                        color: 'rgba(255,255,255,0.12)'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

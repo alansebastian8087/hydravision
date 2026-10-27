@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Water Tests - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Water Test List</h1>
+<p class="muted">Manual water test records for admin and technician use.</p>
+
+<div class="actions-row">
+    <a href="{% url 'water_test_create' %}" class="btn">Add Water Test</a>
+    <a href="{% url 'technician_dashboard' %}" class="btn secondary">Back to Technician Dashboard</a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <tr>
+            <th>Sample Code</th>
+            <th>Customer</th>
+            <th>Test Date</th>
+            <th>Technician</th>
+            <th>BIS Status</th>
+            <th>Score</th>
+        </tr>
+        {% for water_test in water_tests %}
+        <tr>
+            <td>{{ water_test.sample.sample_code }}</td>
+            <td>{{ water_test.sample.customer.name }}</td>
+            <td>{{ water_test.test_date }}</td>
+            <td>{{ water_test.technician }}</td>
+            <td>{{ water_test.bis_status }}</td>
+            <td>{{ water_test.water_quality_score }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No water tests found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

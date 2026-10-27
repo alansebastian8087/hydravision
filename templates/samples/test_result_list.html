@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Water Test - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Add Water Test</h1>
+<p class="muted">Use this page only if you need to create a water test record manually.</p>
+
+<div class="module-grid">
+    <div class="module-card full">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions-row">
+                <button type="submit" class="btn">Save</button>
+                <a href="{% url 'water_test_list' %}" class="btn secondary">Back to Water Tests</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Test Result - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Add Test Result</h1>
+<p class="muted">Use this page only for manual test-result entry. The preferred technician workflow is through Sample Requests.</p>
+
+<div class="module-grid">
+    <div class="module-card full">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="actions-row">
+                <button type="submit" class="btn">Save</button>
+                <a href="{% url 'test_result_list' %}" class="btn secondary">Back to Test Results</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

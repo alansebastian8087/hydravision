@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}HydraVision Home{% endblock %}
+
+{% block hero %}
+
+<!-- Persistent full-page underwater layer — fixed, sits behind hero AND content -->
+<div class="ocean-bg" aria-hidden="true">
+    <div class="bubbles">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="scan-line"></div>
+</div>
+
+<div class="hero hero-minimal">
+    <div class="hero-center">
+        <div class="platform-label">
+            <span class="pulse-dot"></span>
+            Water Quality Testing &amp; Automated Reporting System
+        </div>
+
+        <h1 class="brand-title" data-text="HydraVision">HydraVision</h1>
+
+        <p class="hero-subtext">
+            Real-time sensor monitoring, BIS-compliant analysis, and instant verified reports — all in one dashboard.
+        </p>
+
+        {% if user.is_authenticated %}
+            <div class="hero-actions">
+                <a href="{% url 'role_redirect' %}" class="btn">Go to Dashboard</a>
+                <a href="{% url 'logout' %}" class="btn secondary">Logout</a>
+            </div>
+        {% else %}
+            <div class="hero-actions">
+                <a href="{% url 'client_login' %}" class="btn">Client Login</a>
+                <a href="{% url 'technician_login' %}" class="btn secondary">Technician Login</a>
+                <a href="{% url 'admin_login' %}" class="btn secondary">Admin Login</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Waves anchored to bottom of hero, still part of the page flow -->
+    <div class="wave-wrap" aria-hidden="true">
+        <svg class="wave wave-back" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,40 C150,90 350,0 600,40 C850,80 1050,10 1200,50 L1200,120 L0,120 Z"></path>
+        </svg>
+        <svg class="wave wave-mid" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,60 C200,10 400,90 600,60 C800,30 1000,90 1200,60 L1200,120 L0,120 Z"></path>
+        </svg>
+        <svg class="wave wave-front" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,70 C300,110 500,20 800,60 C950,80 1100,50 1200,70 L1200,120 L0,120 Z"></path>
+        </svg>
+    </div>
+</div>
+
+<style>
+    /* ---------- Page-wide fixed background ---------- */
+    body {
+        background: linear-gradient(135deg, #0b5f87 0%, #118bc8 55%, #39b7e8 100%);
+        background-attachment: fixed;
+    }
+
+    .ocean-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+        box-shadow: inset 0 0 180px rgba(4, 28, 42, 0.55);
+    }
+
+    /* ---------- Bubbles (now travel the full viewport height) ---------- */
+    .bubbles {
+        position: absolute;
+        inset: 0;
+    }
+
+    .bubbles span {
+        position: absolute;
+        bottom: -40px;
+        display: block;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.4);
+        border: 1px solid rgba(255,255,255,0.55);
+        box-shadow: 0 0 8px rgba(255,255,255,0.5), inset -2px -2px 4px rgba(0,0,0,0.15);
+        animation: rise linear infinite;
+    }
+
+    .bubbles span:nth-child(1)  { left: 3%;  width: 8px;  height: 8px;  animation-duration: 9s;   animation-delay: 0s;   --drift: 30px; }
+    .bubbles span:nth-child(2)  { left: 9%;  width: 15px; height: 15px; animation-duration: 12s;  animation-delay: 1.2s; --drift: -25px; }
+    .bubbles span:nth-child(3)  { left: 16%; width: 6px;  height: 6px;  animation-duration: 7s;   animation-delay: 2.4s; --drift: 20px; }
+    .bubbles span:nth-child(4)  { left: 23%; width: 13px; height: 13px; animation-duration: 11s;  animation-delay: 0.4s; --drift: -35px; }
+    .bubbles span:nth-child(5)  { left: 30%; width: 9px;  height: 9px;  animation-duration: 8s;   animation-delay: 3.4s; --drift: 15px; }
+    .bubbles span:nth-child(6)  { left: 37%; width: 18px; height: 18px; animation-duration: 13s;  animation-delay: 1.8s; --drift: -20px; }
+    .bubbles span:nth-child(7)  { left: 44%; width: 7px;  height: 7px;  animation-duration: 8.5s; animation-delay: 2.8s; --drift: 28px; }
+    .bubbles span:nth-child(8)  { left: 51%; width: 12px; height: 12px; animation-duration: 10s;  animation-delay: 0.6s; --drift: -18px; }
+    .bubbles span:nth-child(9)  { left: 58%; width: 14px; height: 14px; animation-duration: 12.5s; animation-delay: 4s;   --drift: 22px; }
+    .bubbles span:nth-child(10) { left: 65%; width: 8px;  height: 8px;  animation-duration: 7.5s; animation-delay: 1.4s; --drift: -30px; }
+    .bubbles span:nth-child(11) { left: 72%; width: 10px; height: 10px; animation-duration: 9.5s; animation-delay: 3.8s; --drift: 18px; }
+    .bubbles span:nth-child(12) { left: 79%; width: 6px;  height: 6px;  animation-duration: 6.5s; animation-delay: 2s;   --drift: -22px; }
+    .bubbles span:nth-child(13) { left: 86%; width: 5px;  height: 5px;  animation-duration: 6s;   animation-delay: 4.6s; --drift: 15px; }
+    .bubbles span:nth-child(14) { left: 92%; width: 16px; height: 16px; animation-duration: 13.5s; animation-delay: 0.2s; --drift: -28px; }
+    .bubbles span:nth-child(15) { left: 12%; width: 5px;  height: 5px;  animation-duration: 5.8s; animation-delay: 3.6s; --drift: 12px; }
+    .bubbles span:nth-child(16) { left: 68%; width: 11px; height: 11px; animation-duration: 10.5s; animation-delay: 2.2s; --drift: -15px; }
+    .bubbles span:nth-child(17) { left: 40%; width: 7px;  height: 7px;  animation-duration: 8.2s; animation-delay: 5s;   --drift: 26px; }
+    .bubbles span:nth-child(18) { left: 55%; width: 9px;  height: 9px;  animation-duration: 9.2s; animation-delay: 1.6s; --drift: -19px; }
+    .bubbles span:nth-child(19) { left: 25%; width: 13px; height: 13px; animation-duration: 11.5s; animation-delay: 4.4s; --drift: 21px; }
+    .bubbles span:nth-child(20) { left: 82%; width: 8px;  height: 8px;  animation-duration: 7.8s; animation-delay: 0.9s; --drift: -24px; }
+
+    @keyframes rise {
+        0%   { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+        8%   { opacity: 1; }
+        50%  { transform: translateY(-55vh) translateX(var(--drift)) scale(1.05); }
+        92%  { opacity: 0.5; }
+        100% { transform: translateY(-110vh) translateX(calc(var(--drift) * 1.6)) scale(1.15); opacity: 0; }
+    }
+
+    /* ---------- Sensor scan line (now travels the full page height) ---------- */
+    .scan-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+        box-shadow: 0 0 24px 6px rgba(160, 240, 255, 0.65), 0 0 60px 10px rgba(110, 220, 255, 0.3);
+        animation: scan 6s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+        0%   { top: 4%; opacity: 0; }
+        10%  { opacity: 1; }
+        50%  { top: 96%; opacity: 1; }
+        60%  { opacity: 0; }
+        100% { top: 96%; opacity: 0; }
+    }
+
+    /* ---------- Hero (now transparent, floats above ocean-bg) ---------- */
+    .hero-minimal {
+        position: relative;
+        z-index: 1;
+        min-height: 72vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.12), transparent 55%);
+    }
+
+    .hero-center {
+        position: relative;
+        z-index: 2;
+        width: min(760px, 100%);
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 20px;
+    }
+
+    .platform-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 16px;
+        margin-bottom: 18px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 8px 24px rgba(4, 28, 42, 0.45);
+        color: #eafaff;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .pulse-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #6ff7c8;
+        box-shadow: 0 0 0 0 rgba(111,247,200,0.7), 0 0 10px 2px rgba(111,247,200,0.7);
+        animation: pulse 1.4s infinite;
+        flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(111,247,200,0.7), 0 0 10px 2px rgba(111,247,200,0.7); }
+        70%  { box-shadow: 0 0 0 10px rgba(111,247,200,0), 0 0 10px 2px rgba(111,247,200,0.7); }
+        100% { box-shadow: 0 0 0 0 rgba(111,247,200,0), 0 0 10px 2px rgba(111,247,200,0.7); }
+    }
+
+    .brand-title {
+        position: relative;
+        margin: 0;
+        font-family: 'Outfit', sans-serif;
+        font-size: clamp(56px, 10vw, 116px);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+        color: #ffffff;
+        text-shadow:
+            0 4px 10px rgba(4, 28, 42, 0.5),
+            0 18px 45px rgba(4, 28, 42, 0.55),
+            0 30px 70px rgba(3, 20, 32, 0.4);
+        animation: titleFloat 5s ease-in-out infinite;
+    }
+
+    @keyframes titleFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+    }
+
+    .brand-title::after {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 100%;
+        width: 100%;
+        transform: scaleY(-1);
+        background: linear-gradient(to bottom, rgba(255,255,255,0.22), transparent 65%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        opacity: 0.55;
+        pointer-events: none;
+        filter: blur(1px);
+    }
+
+    .hero-subtext {
+        margin: 18px auto 0;
+        max-width: 560px;
+        font-size: 17px;
+        line-height: 1.8;
+        color: rgba(255,255,255,0.92);
+        text-shadow: 0 2px 10px rgba(4, 28, 42, 0.35);
+    }
+
+    /* ---------- Buttons: boosted contrast so they stay the focal point ---------- */
+    .hero-actions {
+        position: relative;
+        z-index: 3;
+        margin-top: 30px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 13px 28px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 14.5px;
+        text-decoration: none;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+        background: #ffffff;
+        color: #0b5f87;
+        border: 1px solid rgba(255,255,255,0.9);
+        box-shadow: 0 14px 32px rgba(4, 28, 42, 0.55), 0 4px 10px rgba(4, 28, 42, 0.35);
+    }
+
+    .btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 46px rgba(4, 28, 42, 0.6), 0 6px 16px rgba(4, 28, 42, 0.4);
+        background: #eafaff;
+    }
+
+    .hero-actions .btn.secondary {
+        background: rgba(11, 95, 135, 0.55);
+        color: #fff;
+        backdrop-filter: blur(8px);
+        border: 1.5px solid rgba(255,255,255,0.75);
+        box-shadow: 0 14px 32px rgba(4, 28, 42, 0.5);
+    }
+
+    .hero-actions .btn.secondary:hover {
+        background: rgba(11, 95, 135, 0.75);
+        box-shadow: 0 22px 46px rgba(4, 28, 42, 0.55);
+    }
+
+    /* ---------- Waves ---------- */
+    .wave-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 100px;
+        z-index: 1;
+        filter: drop-shadow(0 -8px 20px rgba(4, 28, 42, 0.35));
+    }
+
+    .wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 200%;
+        height: 100%;
+    }
+
+    .wave path { fill: rgba(255,255,255,0.14); }
+    .wave-mid path { fill: rgba(255,255,255,0.22); }
+    .wave-front path { fill: rgba(255,255,255,0.36); }
+
+    .wave-back  { animation: waveMove 10s linear infinite; }
+    .wave-mid   { animation: waveMove 6.5s linear infinite reverse; }
+    .wave-front { animation: waveMove 4.5s linear infinite; }
+
+    @keyframes waveMove {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+
+    @media (max-width: 768px) {
+        .hero-minimal { min-height: 66vh; padding: 18px; }
+        .platform-label { font-size: 11px; letter-spacing: 0.05em; }
+        .hero-subtext { font-size: 15px; line-height: 1.7; }
+        .wave-wrap { height: 65px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}{% endblock %}

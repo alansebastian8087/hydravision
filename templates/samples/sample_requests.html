@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+
+{% block title %}Sample Requests - HydraVision{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 14% 20%, rgba(56, 189, 248, 0.12), transparent 18%),
+      radial-gradient(circle at 84% 18%, rgba(143, 232, 255, 0.10), transparent 16%),
+      radial-gradient(circle at 52% 84%, rgba(18, 146, 200, 0.10), transparent 18%),
+      linear-gradient(180deg, #05131f 0%, #08263a 20%, #0b3953 48%, #0d5f86 74%, #1174a3 100%);
+    overflow-x: hidden;
+  }
+
+  .container {
+    width: min(1360px, 96%);
+    margin: 20px auto 36px;
+  }
+
+  .request-world {
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 170px);
+    border-radius: 34px;
+    padding: 32px 22px 40px;
+    background:
+      radial-gradient(circle at 24% 18%, rgba(255,255,255,0.08), transparent 20%),
+      radial-gradient(circle at 78% 28%, rgba(143,232,255,0.07), transparent 16%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 30px 60px rgba(2, 16, 27, 0.22);
+    backdrop-filter: blur(8px);
+  }
+
+  .request-world::before,
+  .request-world::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -40px 0;
+    height: 280px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .request-world::before {
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.10), transparent 65%);
+    animation: swell 12s ease-in-out infinite alternate;
+  }
+
+  .request-world::after {
+    background: linear-gradient(180deg, rgba(143,232,255,0.08), rgba(255,255,255,0.02));
+    filter: blur(16px);
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+
+  .bubble-layer,
+  .ripple-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), rgba(255,255,255,0.06));
+    border: 1px solid rgba(255,255,255,0.16);
+    opacity: 0.35;
+    animation: bubbleRise linear infinite;
+  }
+
+  .b1 { left: 6%; width: 14px; height: 14px; animation-duration: 14s; }
+  .b2 { left: 16%; width: 10px; height: 10px; animation-duration: 12s; animation-delay: -4s; }
+  .b3 { left: 30%; width: 18px; height: 18px; animation-duration: 17s; animation-delay: -7s; }
+  .b4 { left: 44%; width: 12px; height: 12px; animation-duration: 11s; animation-delay: -2s; }
+  .b5 { left: 58%; width: 20px; height: 20px; animation-duration: 18s; animation-delay: -5s; }
+  .b6 { left: 74%; width: 10px; height: 10px; animation-duration: 13s; animation-delay: -8s; }
+  .b7 { left: 88%; width: 15px; height: 15px; animation-duration: 15s; animation-delay: -3s; }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+    transform: translate(-50%, -50%) scale(0.5);
+    animation: ripplePulse 8s ease-out infinite;
+  }
+
+  .r1 { left: 18%; top: 24%; width: 220px; height: 220px; }
+  .r2 { left: 80%; top: 22%; width: 280px; height: 280px; animation-delay: 2s; }
+  .r3 { left: 64%; top: 76%; width: 240px; height: 240px; animation-delay: 4s; }
+
+  .request-stage {
+    position: relative;
+    z-index: 2;
+    max-width: 1260px;
+    margin: 0 auto;
+  }
+
+  .hero-block {
+    text-align: center;
+    margin-bottom: 26px;
+    animation: fadeRise 0.8s ease both;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #def7ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .hero-tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aefff;
+    box-shadow: 0 0 12px rgba(154,239,255,0.9);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .hero-block h1 {
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(44px, 6vw, 78px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  }
+
+  .hero-block p {
+    max-width: 820px;
+    margin: 16px auto 0;
+    color: rgba(235,248,255,0.84);
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .summary-bar {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .intro-card,
+  .hint-card {
+    padding: 22px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(14px);
+  }
+
+  .panel-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    background: rgba(143,232,255,0.08);
+    border: 1px solid rgba(143,232,255,0.18);
+    color: #dff9ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .intro-card h2,
+  .hint-card h2 {
+    margin: 0 0 8px;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1.15;
+  }
+
+  .intro-card p,
+  .hint-card p {
+    margin: 0;
+    color: rgba(235,248,255,0.78);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .hint-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .hint-item {
+    color: #effcff;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .section-title {
+    margin: 24px 0 14px;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .table-shell {
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(7, 25, 38, 0.84);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 24px 50px rgba(2, 16, 27, 0.20);
+  }
+
+  .table-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  }
+
+  .table-headline h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+  }
+
+  .table-headline span {
+    color: rgba(233,248,255,0.68);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1020px;
+    background: transparent;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-align: left;
+    padding: 16px 18px;
+    background: rgba(16, 37, 53, 0.98);
+    color: #dcf8ff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 18px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    vertical-align: middle;
+    color: #f3fbff;
+    font-size: 14px;
+  }
+
+  tr:hover td {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .status-chip {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .status-chip.success {
+    color: #bff4da !important;
+    background: rgba(36, 119, 84, 0.24) !important;
+    border-color: rgba(126, 240, 198, 0.18) !important;
+  }
+
+  .status-chip.warning {
+    color: #ffe7a5 !important;
+    background: rgba(143, 111, 27, 0.24) !important;
+    border-color: rgba(255, 224, 138, 0.16) !important;
+  }
+
+  .status-chip.danger {
+    color: #ffc0d0 !important;
+    background: rgba(132, 24, 51, 0.24) !important;
+    border-color: rgba(255, 139, 167, 0.20) !important;
+  }
+
+  .status-chip.info {
+    color: #b7f0ff !important;
+    background: rgba(18, 94, 132, 0.24) !important;
+    border-color: rgba(143, 232, 255, 0.18) !important;
+  }
+
+  .start-btn,
+  .view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.25s ease;
+    white-space: nowrap;
+  }
+
+  .start-btn {
+    color: #03202f;
+    background: linear-gradient(135deg, #c8f7ff 0%, #84e9ff 48%, #5ad2ff 100%);
+    border: 1px solid rgba(143,232,255,0.24);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.14);
+  }
+
+  .view-btn {
+    color: #effcff;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .start-btn:hover,
+  .view-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .empty-row td {
+    text-align: center;
+    color: rgba(233,248,255,0.72);
+  }
+
+  @keyframes bubbleRise {
+    0% { transform: translateY(0) scale(0.9); opacity: 0; }
+    15% { opacity: 0.34; }
+    100% { transform: translateY(-110vh) scale(1.1); opacity: 0; }
+  }
+
+  @keyframes ripplePulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    30% { opacity: 0.24; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+  }
+
+  @keyframes fadeRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes swell {
+    from { transform: translateY(0) scaleX(1); }
+    to { transform: translateY(-12px) scaleX(1.04); }
+  }
+
+  @keyframes drift {
+    from { transform: translateX(-2%); }
+    to { transform: translateX(2%); }
+  }
+
+  @media (max-width: 980px) {
+    .summary-bar {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .request-world {
+      padding: 24px 14px 30px;
+      border-radius: 26px;
+    }
+
+    .hero-block h1 {
+      font-size: 42px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="request-world">
+  <div class="bubble-layer">
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
+    <span class="bubble b4"></span>
+    <span class="bubble b5"></span>
+    <span class="bubble b6"></span>
+    <span class="bubble b7"></span>
+  </div>
+
+  <div class="ripple-layer">
+    <span class="ripple r1"></span>
+    <span class="ripple r2"></span>
+    <span class="ripple r3"></span>
+  </div>
+
+  <div class="request-stage">
+    <div class="hero-block">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Sample Intake Queue
+      </div>
+
+      <h1>Sample Requests</h1>
+
+      <p>
+        Review submitted samples, verify collection details, and begin laboratory testing with visibility into payment status.
+      </p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="intro-card">
+        <div class="panel-tag">Queue Overview</div>
+        <h2>Submitted Water Sample Requests</h2>
+        <p>
+          Use this screen to check request readiness, confirm payment state, and move approved samples into testing without leaving the intake queue.
+        </p>
+      </div>
+
+      <div class="hint-card">
+        <div class="panel-tag">Operator Notes</div>
+        <h2>Quick Review Rules</h2>
+
+        <div class="hint-list">
+          <div class="hint-item">Verify the customer and water source before starting the test.</div>
+          <div class="hint-item">Check payment status before processing chargeable work.</div>
+          <div class="hint-item">Enter Results opens the manual parameter page for samples currently in testing.</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Submitted Requests</h2>
+
+    <div class="table-shell">
+      <div class="table-headline">
+        <h3>Sample Intake Table</h3>
+        <span>Current request list with payment visibility and status-based actions</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sample ID</th>
+              <th>Customer Name</th>
+              <th>Water Source</th>
+              <th>Collection Date</th>
+              <th>Sample Status</th>
+              <th>Payment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for row in sample_rows %}
+            <tr>
+              <td>{{ row.sample.sample_code }}</td>
+              <td>{{ row.sample.customer.name }}</td>
+              <td>{{ row.sample.water_source }}</td>
+              <td>{{ row.sample.collection_date }}</td>
+
+              <td>
+                {% with sample_status=row.sample.sample_status|lower %}
+                  {% if 'pending' in sample_status or 'requested' in sample_status or 'submitted' in sample_status %}
+                    <span class="status-chip warning">{{ row.sample.sample_status }}</span>
+
+                  {% elif 'testing' in sample_status %}
+                    <span class="status-chip info">{{ row.sample.sample_status }}</span>
+
+                  {% elif 'completed' in sample_status or 'report' in sample_status %}
+                    <span class="status-chip success">{{ row.sample.sample_status }}</span>
+
+                  {% else %}
+                    <span class="status-chip success">{{ row.sample.sample_status }}</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+
+              <td>
+                {% if row.payment %}
+                  {% if row.payment.payment_status == 'Paid' %}
+                    <span class="status-chip success">Paid</span>
+                  {% else %}
+                    <span class="status-chip warning">Pending</span>
+                  {% endif %}
+                {% else %}
+                  <span class="status-chip danger">Not Added</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% with sample_status=row.sample.sample_status|lower %}
+                  {% if 'completed' in sample_status or 'report' in sample_status %}
+                    <a href="{% url 'sample_detail' row.sample.pk %}" class="view-btn">
+                      View Details
+                    </a>
+
+                  {% elif 'testing' in sample_status %}
+                    <a href="{% url 'enter_test_results' row.sample.pk %}" class="start-btn">
+                      Enter Results
+                    </a>
+
+                  {% else %}
+                    <a href="{% url 'accept_sample' row.sample.pk %}" class="start-btn">
+                      Start Test
+                    </a>
+                  {% endif %}
+                {% endwith %}
+              </td>
+            </tr>
+
+            {% empty %}
+            <tr class="empty-row">
+              <td colspan="7">No sample requests found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

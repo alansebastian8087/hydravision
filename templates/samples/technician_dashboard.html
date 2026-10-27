@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+
+{% block title %}Technician Dashboard - HydraVision{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.12), transparent 18%),
+      radial-gradient(circle at 84% 18%, rgba(143, 232, 255, 0.10), transparent 16%),
+      radial-gradient(circle at 50% 80%, rgba(18, 146, 200, 0.10), transparent 18%),
+      linear-gradient(180deg, #05131f 0%, #08263a 20%, #0b3953 48%, #0d5f86 74%, #1174a3 100%);
+    overflow-x: hidden;
+  }
+
+  .container {
+    width: min(1340px, 96%);
+    margin: 20px auto 36px;
+  }
+
+  .tech-world {
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 170px);
+    border-radius: 34px;
+    padding: 32px 22px 40px;
+    background:
+      radial-gradient(circle at 26% 18%, rgba(255,255,255,0.08), transparent 20%),
+      radial-gradient(circle at 76% 28%, rgba(143,232,255,0.07), transparent 16%),
+      linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 30px 60px rgba(2, 16, 27, 0.22);
+    backdrop-filter: blur(8px);
+  }
+
+  .tech-world::before,
+  .tech-world::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -40px 0;
+    height: 280px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .tech-world::before {
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.10), transparent 65%);
+    animation: swell 12s ease-in-out infinite alternate;
+  }
+
+  .tech-world::after {
+    background: linear-gradient(180deg, rgba(143,232,255,0.08), rgba(255,255,255,0.02));
+    filter: blur(16px);
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+
+  .bubble-layer,
+  .ripple-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), rgba(255,255,255,0.06));
+    border: 1px solid rgba(255,255,255,0.16);
+    opacity: 0.35;
+    animation: bubbleRise linear infinite;
+  }
+
+  .b1 { left: 6%; width: 14px; height: 14px; animation-duration: 14s; }
+  .b2 { left: 16%; width: 10px; height: 10px; animation-duration: 12s; animation-delay: -4s; }
+  .b3 { left: 30%; width: 18px; height: 18px; animation-duration: 17s; animation-delay: -7s; }
+  .b4 { left: 44%; width: 12px; height: 12px; animation-duration: 11s; animation-delay: -2s; }
+  .b5 { left: 58%; width: 20px; height: 20px; animation-duration: 18s; animation-delay: -5s; }
+  .b6 { left: 74%; width: 10px; height: 10px; animation-duration: 13s; animation-delay: -8s; }
+  .b7 { left: 88%; width: 15px; height: 15px; animation-duration: 15s; animation-delay: -3s; }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+    transform: translate(-50%, -50%) scale(0.5);
+    animation: ripplePulse 8s ease-out infinite;
+  }
+
+  .r1 { left: 18%; top: 26%; width: 220px; height: 220px; }
+  .r2 { left: 80%; top: 22%; width: 280px; height: 280px; animation-delay: 2s; }
+  .r3 { left: 66%; top: 74%; width: 240px; height: 240px; animation-delay: 4s; }
+
+  .tech-stage {
+    position: relative;
+    z-index: 2;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+
+  .hero-block {
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeRise 0.8s ease both;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #def7ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .hero-tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aefff;
+    box-shadow: 0 0 12px rgba(154,239,255,0.9);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .hero-block h1 {
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(44px, 6vw, 78px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.16);
+  }
+
+  .hero-block p {
+    max-width: 780px;
+    margin: 16px auto 0;
+    color: rgba(235,248,255,0.84);
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    position: relative;
+    padding: 22px 18px;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(143,232,255,0.10), rgba(143,232,255,0.72), rgba(143,232,255,0.10));
+  }
+
+  .kpi-label {
+    color: rgba(226,247,255,0.72);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    color: #ffffff;
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .module-shell {
+    margin-top: 8px;
+    margin-bottom: 24px;
+    padding: 24px;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    backdrop-filter: blur(14px);
+  }
+
+  .module-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    background: rgba(143,232,255,0.08);
+    border: 1px solid rgba(143,232,255,0.18);
+    color: #dff9ff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .module-title {
+    margin: 0 0 8px;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1.15;
+  }
+
+  .module-text {
+    margin: 0 0 18px;
+    color: rgba(235,248,255,0.78);
+    font-size: 14px;
+    line-height: 1.8;
+    max-width: 760px;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .water-btn,
+  .ghost-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.25s ease;
+  }
+
+  .water-btn {
+    color: #03202f;
+    background: linear-gradient(135deg, #c8f7ff 0%, #84e9ff 48%, #5ad2ff 100%);
+    border: 1px solid rgba(143,232,255,0.24);
+    box-shadow: 0 14px 28px rgba(0,0,0,0.16);
+  }
+
+  .ghost-btn {
+    color: #effcff;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .water-btn:hover,
+  .ghost-btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .section-title {
+    margin: 24px 0 14px;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .table-shell {
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(7, 25, 38, 0.84);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 24px 50px rgba(2, 16, 27, 0.20);
+  }
+
+  .table-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  }
+
+  .table-headline h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+  }
+
+  .table-headline span {
+    color: rgba(233,248,255,0.68);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 860px;
+    background: transparent;
+  }
+
+  th {
+    text-align: left;
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.04);
+    color: #dcf8ff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 18px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    vertical-align: middle;
+    color: #f3fbff;
+    font-size: 14px;
+  }
+
+  tr:hover td {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .status-badge.pending {
+    color: #ffe7a5;
+    background: rgba(143, 111, 27, 0.24);
+    border-color: rgba(255, 224, 138, 0.16);
+  }
+
+  .status-badge.testing {
+    color: #b7f0ff;
+    background: rgba(18, 94, 132, 0.24);
+    border-color: rgba(143, 232, 255, 0.18);
+  }
+
+  .status-badge.completed,
+  .status-badge.generated {
+    color: #bff4da;
+    background: rgba(36, 119, 84, 0.24);
+    border-color: rgba(126, 240, 198, 0.18);
+  }
+
+  .table-link {
+    color: #9eeeff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .table-link:hover {
+    color: #ffffff;
+  }
+
+  .empty-row td {
+    text-align: center;
+    color: rgba(233,248,255,0.72);
+  }
+
+  @keyframes bubbleRise {
+    0% { transform: translateY(0) scale(0.9); opacity: 0; }
+    15% { opacity: 0.34; }
+    100% { transform: translateY(-110vh) scale(1.1); opacity: 0; }
+  }
+
+  @keyframes ripplePulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    30% { opacity: 0.24; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.6; }
+  }
+
+  @keyframes fadeRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes swell {
+    from { transform: translateY(0) scaleX(1); }
+    to { transform: translateY(-12px) scaleX(1.04); }
+  }
+
+  @keyframes drift {
+    from { transform: translateX(-2%); }
+    to { transform: translateX(2%); }
+  }
+
+  @media (max-width: 1100px) {
+    .stats-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .tech-world {
+      padding: 24px 14px 30px;
+      border-radius: 26px;
+    }
+
+    .hero-block h1 {
+      font-size: 42px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .actions-row {
+      flex-direction: column;
+    }
+
+    .water-btn,
+    .ghost-btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="tech-world">
+  <div class="bubble-layer">
+    <span class="bubble b1"></span>
+    <span class="bubble b2"></span>
+    <span class="bubble b3"></span>
+    <span class="bubble b4"></span>
+    <span class="bubble b5"></span>
+    <span class="bubble b6"></span>
+    <span class="bubble b7"></span>
+  </div>
+
+  <div class="ripple-layer">
+    <span class="ripple r1"></span>
+    <span class="ripple r2"></span>
+    <span class="ripple r3"></span>
+  </div>
+
+  <div class="tech-stage">
+    <div class="hero-block">
+      <div class="hero-tag">
+        <span class="dot"></span>
+        Laboratory Workflow
+      </div>
+
+      <h1>Lab Technician Dashboard</h1>
+
+      <p>
+        Monitor incoming samples, testing progress, and recent activity from one operational view.
+      </p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="kpi-label">Today's Samples</div>
+        <div class="kpi-value">{{ today_samples }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="kpi-label">Pending</div>
+        <div class="kpi-value">{{ pending_samples }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="kpi-label">Testing</div>
+        <div class="kpi-value">{{ testing_samples }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value">{{ completed_samples }}</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="kpi-label">Reports Generated</div>
+        <div class="kpi-value">{{ report_generated_samples }}</div>
+      </div>
+    </div>
+
+    <div class="module-shell">
+      <div class="module-tag">Workflow Actions</div>
+      <h2 class="module-title">Operational Shortcuts</h2>
+
+      <p class="module-text">
+        Open submitted sample requests and begin the laboratory testing workflow.
+      </p>
+
+      <div class="actions-row">
+        <a href="{% url 'sample_requests' %}" class="water-btn">
+          View Sample Requests
+        </a>
+      </div>
+    </div>
+
+    <h2 class="section-title">Recent Test Activity</h2>
+
+    <div class="table-shell">
+      <div class="table-headline">
+        <h3>Recent Test Reports</h3>
+        <span>Latest laboratory activity and testing outcomes</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sample Code</th>
+              <th>Customer</th>
+              <th>Test Date</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for test in recent_tests %}
+            <tr>
+              <td>{{ test.sample.sample_code }}</td>
+              <td>{{ test.sample.customer.name }}</td>
+              <td>{{ test.test_date }}</td>
+
+              <td>
+                {% with status=test.sample.sample_status|lower %}
+                  {% if 'pending' in status %}
+                    <span class="status-badge pending">{{ test.sample.sample_status }}</span>
+                  {% elif 'testing' in status %}
+                    <span class="status-badge testing">{{ test.sample.sample_status }}</span>
+                  {% elif 'completed' in status or 'report' in status %}
+                    <span class="status-badge completed">{{ test.sample.sample_status }}</span>
+                  {% else %}
+                    <span class="status-badge generated">{{ test.sample.sample_status }}</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+
+              <td>{{ test.water_quality_score }}</td>
+
+              <td>
+                <a href="{% url 'sample_detail' test.sample.pk %}" class="table-link">
+                  View
+                </a>
+              </td>
+            </tr>
+
+            {% empty %}
+            <tr class="empty-row">
+              <td colspan="6">No recent test reports available.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

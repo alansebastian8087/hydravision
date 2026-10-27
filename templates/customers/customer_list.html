@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Customer List</h1>
+
+<a href="{% url 'customer_create' %}" class="btn">Add Customer</a>
+
+<table border="1" cellpadding="10" cellspacing="0" style="margin-top: 20px; width: 100%; border-collapse: collapse;">
+    <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Address</th>
+        <th>Actions</th>
+    </tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer.name }}</td>
+        <td>{{ customer.phone }}</td>
+        <td>{{ customer.email }}</td>
+        <td>{{ customer.address }}</td>
+        <td>
+            <a href="{% url 'customer_update' customer.pk %}">Edit</a> |
+            <a href="{% url 'customer_delete' customer.pk %}">Delete</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5">No customers found.</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

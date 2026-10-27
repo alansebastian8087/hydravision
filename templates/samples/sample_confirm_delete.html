@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Sample - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Delete Sample</h1>
+
+<p>Are you sure you want to delete sample "{{ sample.sample_code }}"?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, Delete</button>
+</form>
+
+<br>
+<a href="{% url 'sample_list' %}">Cancel</a>
+{% endblock %}

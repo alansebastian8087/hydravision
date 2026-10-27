@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - HydraVision{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <p style="color: red;">{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="post" style="max-width: 400px;">
+    {% csrf_token %}
+
+    <p>
+        <label for="id_username">Username:</label>
+        <input type="text" name="username" id="id_username" required>
+    </p>
+
+    <p>
+        <label for="id_password">Password:</label>
+        <input type="password" name="password" id="id_password" required>
+    </p>
+
+    <button type="submit" class="btn">Login</button>
+</form>
+
+<p>
+    <a href="{% url 'register_client' %}">Register as Client</a>
+</p>
+{% endblock %}
